@@ -196,66 +196,7 @@ class Classifier(ABC):
         """
         self.model.load_weights(filepath)
 
-
-class BinaryTextClassifier(Classifier):
-
-    def __init__(self, language_model_name, language_model_trainable=Classifier.LANGUAGE_MODEL_TRAINABLE,
-                 max_length=Classifier.MAX_LENGTH, learning_rate=Classifier.LEARNING_RATE,
-                 dropout_rate=Classifier.DROPOUT_RATE):
-        Classifier.__init__(self, language_model_name, language_model_trainable=language_model_trainable,
-                            max_length=max_length, learning_rate=learning_rate, dropout_rate=dropout_rate)
-        # create the language model
-        language_model = self.load_language_model()
-
-        # print the GPUs that tensorflow can find, and enable memory growth.
-        # memory growth is something that CJ had to do, but doesn't work for me
-        # set memory growth prevents tensor flow from just grabbing all available VRAM
-        # physical_devices = tf.config.list_physical_devices('GPU')
-        # print (physical_devices)
-        # tf.config.experimental.set_memory_growth(physical_devices[0], True)
-
-        # create the model
-        # create the input layer, it contains the input ids (from tokenizer) and the
-        # the padding mask (which masks padded values)
-        input_ids = Input(shape=(None,), dtype=tf.int32, name="input_ids")
-        input_padding_mask = Input(shape=(None,), dtype=tf.int32, name="input_padding_mask")
-
-        # create the embeddings - the 0th index is the last hidden layer
-        embeddings = language_model(input_ids=input_ids, attention_mask=input_padding_mask)[0]
-
-        # We can create a sentence embedding using the one directly from BERT, or using a biLSTM
-        # OR, we can return the sequence from BERT (just don't slice) or the BiLSTM (use retrun_sequences=True)
-        # create the sentence embedding layer - using the BERT sentence representation (cls token)
-        sentence_representation_language_model = embeddings[:, 0, :]
-        # Note: we are slicing because this is a sentence classification task. We only need the cls predictions
-        # not the individual words, so just the 0th index in the 3D tensor. Other indices are embeddings for
-        # subsequent words in the sequence (http://jalammar.github.io/a-visual-guide-to-using-bert-for-the-first-time/)
-
-        # Alternatively, we can use a biLSTM to create a sentence representation -- This seems to generally work better
-        # create the sentence embedding layer using a biLSTM and BERT token representations
-        # lstm_size=128
-        # biLSTM_layer = tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(units=lstm_size))
-        # sentence_representation_biLSTM = biLSTM_layer(embeddings)
-
-        dense1 = tf.keras.layers.Dense(128, activation='gelu')
-        dropout1 = tf.keras.layers.Dropout(self._dropout_rate)
-        output1 = dropout1(dense1(sentence_representation_language_model))
-
-        sigmoid_layer = tf.keras.layers.Dense(1, activation='sigmoid')
-        final_output = sigmoid_layer(output1)
-
-        # combine the language model with the classificaiton part
-        self.model = Model(inputs=[input_ids, input_padding_mask], outputs=[final_output])
-
-        # compile the model
-        optimizer = tf.keras.optimizers.Adam(learning_rate=self._learning_rate)
-        self.model.compile(
-            optimizer=optimizer,
-            loss='binary_crossentropy',
-            metrics=['accuracy', tf.keras.metrics.Precision(), tf.keras.metrics.Recall(), tfa.metrics.F1Score(1)]
-        )
-
-class TokenClassifier(Classifier):
+class BERTBaseline(Classifier):
 
     def __init__(self, language_model_name, num_classes, multi_class, language_model_trainable=Classifier.LANGUAGE_MODEL_TRAINABLE,
                  max_length=Classifier.MAX_LENGTH, learning_rate=Classifier.LEARNING_RATE,
@@ -280,13 +221,8 @@ class TokenClassifier(Classifier):
         # create the embeddings - the 0th index is the last hidden layer
         embeddings = language_model(input_ids=input_ids, attention_mask=input_padding_mask)[0]
 
-        # create the output layer
-        if self._multi_class:
-            activation = 'softmax'
-            loss_function = 'categorical_crossentropy'
-        else: #multi-label or binary
-            activation = 'sigmoid'
-            loss_function = 'binary_crossentropy'
+        activation = 'sigmoid'
+        loss_function = 'binary_crossentropy'
 
         output_layer = tf.keras.layers.Dense(self._num_classes, activation=activation)
         final_output = output_layer(embeddings)
