@@ -11,11 +11,12 @@ class EmrqaDataset(datasets.GeneratorBasedBuilder, ABC):
                                                                                   "evidence"),
         datasets.BuilderConfig(name="emrqa_evidence", version=VERSION, description="EMRQA dataset with only evidence")
     ]
-
+    DESCRIPTION = "EMRQA dataset"
     DEFAULT_CONFIG_NAME = "emrqa_context"
 
     def _info(self):
         return datasets.DatasetInfo(
+            description=self.DESCRIPTION,
             features=datasets.Features(
                 {
                     "question": datasets.Value("string"),

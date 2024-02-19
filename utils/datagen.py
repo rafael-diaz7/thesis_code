@@ -1,33 +1,51 @@
 import json
 import pandas as pd
 
-with open('../data/data.json') as f:
-    data = json.load(f)
-
 question_all = []
 context_all = []
 answer_all = []
 evidence_all = []
-answer_start_all = []
 
-for dataset in data['data']:
-    if dataset['title'] in ['obesity', 'smoking']:
-        continue
-    for paragraph in dataset['paragraphs']:
-        context = "".join(paragraph['context'])
-        for qa_pair in paragraph['qas']:
-            questions = list(set(qa_pair['question']))
-            for answer in qa_pair['answers']:
+with open('../data/data.json') as f:
+    for dataset in json.load(f)['data']:
+        if dataset['title'] in ['obesity', 'smoking']:
+            # ignoring these datasets because they are poorly formatted for extractive QA
+            continue
+        for paragraph in dataset['paragraphs']:
+            context = "".join(paragraph['context'])
+            for qa_pair in paragraph['qas']:
+                questions = list(set(qa_pair['question']))
+                answer = qa_pair['answers'][0]
                 if answer['text'] == "":
+                    # some items have no answer, likely due to it being one of the invalid datasets, but we should be
+                    # cautious and check for this
                     continue
-                answer_start = answer['answer_start']
-                answer_start_formatted = answer_start[1] if type(answer_start[1]) != list else answer_start[1][0]
-                question_all.extend(questions)
-                context_all.extend([context] * len(questions))
-                answer_all.extend([answer['text']] * len(questions))
-                evidence_all.extend([answer['evidence']] * len(questions))
-                answer_start_all.extend([answer_start_formatted] * len(questions))
+                if type(answer['text']) == list:
+                    answer['text'] = answer['text'][0]
+                if type(answer['evidence']) == list:
+                    answer['evidence'] = answer['evidence'][0]
+                question_all.append(questions[0].lower())
+                context_all.append(context.lower())
+                answer_all.append(answer['text'].lower())
+                evidence_all.append(answer['evidence'].lower())
 
-df = pd.DataFrame({'question': question_all, 'context': context_all, 'answer': answer_all, 'answer_start': answer_start_all, 'evidence': evidence_all})
-df = df.dropna()
-df.to_csv('../data/emrqa_all_data.csv', index=False)
+master_df = pd.DataFrame(
+    {
+        'question': question_all,
+        'context': context_all,
+        'answer': answer_all,
+        'evidence': evidence_all,
+    }
+)
+master_df = master_df.dropna()
+master_df = master_df.sample(frac=1).reset_index(drop=True)  # shuffling the dataset
+# 80/20 split for train/test
+test_df = master_df.iloc[int(len(master_df)*0.8):]
+train_val_df = master_df.iloc[:int(len(master_df)*0.8)]
+# of the 80/20, we are doing a 90/10 split on the 80% for train/val
+val_df = train_val_df.iloc[int(len(train_val_df)*0.9):]
+train_df = train_val_df.iloc[:int(len(train_val_df)*0.9)]
+
+train_df.to_csv('../data/emrqa_train.csv', index=False)
+val_df.to_csv('../data/emrqa_val.csv', index=False)
+test_df.to_csv('../data/emrqa_test.csv', index=False)
