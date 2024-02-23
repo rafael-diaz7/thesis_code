@@ -1,9 +1,8 @@
 from transformers import AutoTokenizer, TFAutoModel
 import tensorflow as tf
-import pandas as pd
-import numpy as np
 
-from model_utils.Metrics import ExtractiveQAMetrics
+
+from Metrics import ExtractiveQAMetrics
 
 MODEL_NAME = 'bert-base-uncased'
 EPOCHS = 1
@@ -36,7 +35,7 @@ class BertBaseline():
         metrics = []
         # metrics = [ExtractiveQAMetrics().exact_match, ExtractiveQAMetrics().f1_score,
         #            ExtractiveQAMetrics().recall, ExtractiveQAMetrics().precision]
-        metrics = [ExtractiveQAMetrics().precision]
+        # metrics = [ExtractiveQAMetrics().precision]
         self.model.compile(optimizer=optimizer, loss=self.custom_loss, metrics=metrics)
         self.model.summary()
 

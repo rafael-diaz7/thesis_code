@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from model_utils.Models import BertBaseline
+from Models import BertBaseline
 from transformers import AutoTokenizer
 
 
