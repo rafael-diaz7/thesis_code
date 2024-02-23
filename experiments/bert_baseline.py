@@ -24,11 +24,13 @@ if __name__ == '__main__':
                               return_tensors='tf')
 
     train_x = (tokenized_train['input_ids'], tokenized_train['attention_mask'])
-    train_y = np.stack((train_dataset['start_token'], train_dataset['end_token']), axis=1).astype('float32')
+    # convert the start and end tokens to a one-hot encoded tensor and make it a 512x2 tensor
+    train_y = np.stack((np.eye(512)[train_dataset['start_token']], np.eye(512)[train_dataset['end_token']]), axis=1)
     val_x = (tokenized_val['input_ids'], tokenized_val['attention_mask'])
-    val_y = np.stack((val_dataset['start_token'], val_dataset['end_token']), axis=1).astype('float32')
+    val_y = np.stack((np.eye(512)[val_dataset['start_token']], np.eye(512)[val_dataset['end_token']]), axis=1)
     bert_baseline = BertBaseline()
-    print(val_y.shape)
-    history = bert_baseline.train(train_x, train_y, val_x, val_y)
+    history = bert_baseline.train(train_x, train_y, val_x, val_y, batch_size=32, epochs=50)
+    bert_baseline.model.save('bert_evidence_baseline_model.h5')
+    bert_baseline.model.save_weights('bert_evidence_baseline_weights.h5')
 
 

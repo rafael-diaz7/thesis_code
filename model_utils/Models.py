@@ -1,9 +1,9 @@
 from transformers import AutoTokenizer, TFAutoModel
-from model_utils.Layers import AnswerSpan
-from model_utils.Metrics import ExtractiveQAMetrics
 import tensorflow as tf
 import pandas as pd
 import numpy as np
+
+from model_utils.Metrics import ExtractiveQAMetrics
 
 MODEL_NAME = 'bert-base-uncased'
 EPOCHS = 1
@@ -29,33 +29,21 @@ class BertBaseline():
 
         embeddings = language_model(input_ids, attention_mask=attention_mask)[0]
 
-        # output layer which will be a probability distribution over all the tokens indicating start or end of the answer
-        start_logits = tf.keras.layers.Dense(1, name='start_logits', use_bias=False)(embeddings)
-        end_logits = tf.keras.layers.Dense(1, name='end_logits', use_bias=False)(embeddings)
+        spans = tf.keras.layers.Dense(2, activation='sigmoid')(embeddings)
 
-        answer_span_layer = AnswerSpan()
-        # convert start logit to span of the answer using the most probable start index
-        start_span, end_span = answer_span_layer([start_logits, end_logits])
-
-
-        # concatenate into a single 2x1 tensor
-        output = tf.keras.layers.Concatenate(name='output')([start_span, end_span])
-
-
-        self.model = tf.keras.Model(inputs=[input_ids, attention_mask], outputs=output)
+        self.model = tf.keras.Model(inputs=[input_ids, attention_mask], outputs=spans)
         optimizer = tf.keras.optimizers.Adam(learning_rate=self.learning_rate)
-        # metrics = []
-        metrics = [ExtractiveQAMetrics().exact_match, ExtractiveQAMetrics().f1_score,
-                   ExtractiveQAMetrics().recall, ExtractiveQAMetrics().precision]
+        metrics = []
+        # metrics = [ExtractiveQAMetrics().exact_match, ExtractiveQAMetrics().f1_score,
+        #            ExtractiveQAMetrics().recall, ExtractiveQAMetrics().precision]
+        metrics = [ExtractiveQAMetrics().precision]
         self.model.compile(optimizer=optimizer, loss=self.custom_loss, metrics=metrics)
         self.model.summary()
 
+
     def custom_loss(self, y_true, y_pred):
-        start_loss = tf.keras.losses.sparse_categorical_crossentropy(
-            tf.one_hot(tf.cast(y_true[:, 0], tf.int32), depth=self.num_classes), y_pred[0], from_logits=True)
-        end_loss = tf.keras.losses.sparse_categorical_crossentropy(
-            tf.one_hot(tf.cast(y_true[:, 1], tf.int32), depth=self.num_classes), y_pred[1], from_logits=True)
-        return start_loss + end_loss
+        y_pred_transposed = tf.transpose(y_pred, perm=[0, 2, 1])
+        return tf.keras.losses.categorical_crossentropy(y_true, y_pred_transposed, from_logits=False)
 
 
     def train(self, x_train, y_train, x_val, y_val, epochs=EPOCHS, batch_size=BATCH_SIZE):
@@ -84,3 +72,9 @@ class BertBaseline():
         end_index = tf.argmax(end_probs, axis=1)
 
         return start_index, end_index
+
+    def save_model(self, filepath):
+        self.model.save(filepath)
+        self.model.save_weights(filepath)
+
+# change y_true

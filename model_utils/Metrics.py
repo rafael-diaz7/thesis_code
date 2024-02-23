@@ -24,12 +24,15 @@ class ExtractiveQAMetrics():
         """
         Returns the number of shared words between the y_true and the y_pred
         """
-        y_pred = self.convert_output_to_span(y_pred[0], y_pred[1])
+        y_pred = tf.transpose(y_pred, perm=[0, 2, 1])
         print("y_true shape", y_true.shape)
-        print(y_true)
+        print(y_true.numpy())
         print(type(y_true))
-        print(y_pred)
+        print("y_pred shape", y_pred.shape)
+        print(y_pred.numpy())
         print(type(y_pred))
+
+        y_pred = self.convert_output_to_span(y_pred[0], y_pred[1])
         true_start, true_end = y_true
         pred_start, pred_end = tf.unstack(y_pred)
 
