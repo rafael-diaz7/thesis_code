@@ -2,8 +2,6 @@ from transformers import AutoTokenizer, TFAutoModel
 import tensorflow as tf
 
 
-from Metrics import ExtractiveQAMetrics
-
 MODEL_NAME = 'bert-base-uncased'
 EPOCHS = 1
 BATCH_SIZE = 32
@@ -60,20 +58,23 @@ class BertBaseline():
                            callbacks=callbacks,
                            verbose=1)
 
-    def predict(self, x, batch_size=100):
-        tokenized = self.tokenizer(x, padding='max_length', truncation=True, max_length=self.max_length, return_tensors='tf')
-        x = (tokenized['input_ids'], tokenized['attention_mask'])
-
-        start_probs, end_probs = self.model.predict(x, batch_size=batch_size)
-
-        # Get the index with the highest probability for each position
-        start_index = tf.argmax(start_probs, axis=1)
-        end_index = tf.argmax(end_probs, axis=1)
-
-        return start_index, end_index
+    # def predict(self, x, batch_size=100):
+    #     tokenized = self.tokenizer(x, padding='max_length', truncation=True, max_length=self.max_length, return_tensors='tf')
+    #     x = (tokenized['input_ids'], tokenized['attention_mask'])
+    #
+    #     start_probs, end_probs = self.model.predict(x, batch_size=batch_size)
+    #
+    #     # Get the index with the highest probability for each position
+    #     start_index = tf.argmax(start_probs, axis=1)
+    #     end_index = tf.argmax(end_probs, axis=1)
+    #
+    #     return start_index, end_index
 
     def save_model(self, filepath):
         self.model.save(filepath)
         self.model.save_weights(filepath)
+
+    def load_model_weights(self, filepath):
+        self.model.load_weights(filepath)
 
 # change y_true

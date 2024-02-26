@@ -2,9 +2,9 @@ import pandas as pd
 import numpy as np
 from Models import BertBaseline
 from transformers import AutoTokenizer
+import tensorflow as tf
 
-
-if __name__ == '__main__':
+def train():
     tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased')
     train_dataset = pd.read_csv('../data/emrqa_evidence_train.csv')
     val_dataset = pd.read_csv('../data/emrqa_evidence_val.csv')
@@ -32,5 +32,25 @@ if __name__ == '__main__':
     history = bert_baseline.train(train_x, train_y, val_x, val_y, batch_size=32, epochs=50)
     bert_baseline.model.save('bert_evidence_baseline_model.h5')
     bert_baseline.model.save_weights('bert_evidence_baseline_weights.h5')
+
+def test():
+    model = BertBaseline()
+    model.load_model_weights('../models/bert_evidence_baseline_weights.h5')
+    tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased')
+    test_dataset = pd.read_csv('../data/emrqa_evidence_test.csv')
+    tokenized_test = tokenizer(test_dataset['question'].to_list(),
+                               test_dataset['evidence'].to_list(),
+                               padding='max_length',
+                               truncation=True,
+                               max_length=512,
+                               return_tensors='tf')
+    test_x = (tokenized_test['input_ids'], tokenized_test['attention_mask'])
+    test_y = np.stack((np.eye(512)[test_dataset['start_token']], np.eye(512)[test_dataset['end_token']]), axis=1)
+    results = model.model.predict(test_x, batch_size=32)
+    print(results.shape)
+
+if __name__ == '__main__':
+    test()
+
 
 
