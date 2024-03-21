@@ -9,9 +9,8 @@ test_df = pd.read_csv('../data/emrqa_test.csv')
 
 
 def calc_token_spans(question, evidence, answer):
-    inputs = tokenizer(question, evidence, truncation='only_second',
-                       stride=50, return_overflowing_tokens=True, return_offsets_mapping=True)
-    offset = inputs['offset_mapping'][0]
+    inputs = tokenizer(question, evidence, return_offsets_mapping=True)
+    offset = inputs['offset_mapping']
     calc_answer_start = evidence.find(answer)
     end_char = calc_answer_start + len(answer)
     sequence_ids = inputs.sequence_ids()
@@ -48,3 +47,11 @@ test_df[['start_token', 'end_token']] = test_df.apply(lambda x: calc_token_spans
 train_df.to_csv('../data/emrqa_evidence_train.csv', index=False)
 val_df.to_csv('../data/emrqa_evidence_val.csv', index=False)
 test_df.to_csv('../data/emrqa_evidence_test.csv', index=False)
+
+train_df[['start_token', 'end_token']] = train_df.apply(lambda x: calc_token_spans(x['question'], x['context'], x['answer']), axis=1, result_type='expand')
+val_df[['start_token', 'end_token']] = val_df.apply(lambda x: calc_token_spans(x['question'], x['context'], x['answer']), axis=1, result_type='expand')
+test_df[['start_token', 'end_token']] = test_df.apply(lambda x: calc_token_spans(x['question'], x['context'], x['answer']), axis=1, result_type='expand')
+
+train_df.to_csv('../data/emrqa_context_train.csv', index=False)
+val_df.to_csv('../data/emrqa_context_val.csv', index=False)
+test_df.to_csv('../data/emrqa_context_test.csv', index=False)
