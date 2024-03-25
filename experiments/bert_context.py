@@ -50,7 +50,7 @@ def test():
     print(results.shape)
 
 if __name__ == '__main__':
-    test()
+    train()
 
 
 
