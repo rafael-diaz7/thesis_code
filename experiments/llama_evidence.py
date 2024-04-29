@@ -64,4 +64,4 @@ predictions_df = pd.DataFrame(
     }
 )
 
-predictions_df.to_csv("../data/llama_evidence_predictions.csv", index=False)
+predictions_df.to_csv("llama_evidence_predictions.csv", index=False)

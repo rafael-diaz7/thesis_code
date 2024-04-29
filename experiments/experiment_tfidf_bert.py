@@ -4,6 +4,7 @@ from Models import BertBaseline
 from transformers import AutoTokenizer
 
 def train():
+    print("Training Bert with TF-IDF Evidence")
     tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased')
     train_dataset = pd.read_csv('../data/emrqa_tfidf_evidence_train.csv')
     val_dataset = pd.read_csv('../data/emrqa_tfidf_evidence_val.csv')
@@ -29,8 +30,8 @@ def train():
     val_y = np.stack((np.eye(512)[val_dataset['start_token']], np.eye(512)[val_dataset['end_token']]), axis=1)
     bert_baseline = BertBaseline()
     history = bert_baseline.train(train_x, train_y, val_x, val_y, batch_size=32, epochs=50)
-    bert_baseline.model.save('bert_evidence_baseline_model')
-    bert_baseline.model.save_weights('bert_evidence_baseline_weights')
+    print("Saving Bert with TF-IDF Evidence")
+    bert_baseline.model.save('bert_tfidf_model')
 
 def test():
     model = BertBaseline()
@@ -47,6 +48,7 @@ def test():
     test_y = np.stack((np.eye(512)[test_dataset['start_token']], np.eye(512)[test_dataset['end_token']]), axis=1)
     results = model.model.predict(test_x, batch_size=32)
     print(results.shape)
+
 
 if __name__ == '__main__':
     train()

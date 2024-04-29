@@ -2,19 +2,20 @@ from transformers import AutoTokenizer, TFAutoModel
 import tensorflow as tf
 
 
-MODEL_NAME = 'bert-base-uncased'
+MODEL_NAME = 'emilyalsentzer/Bio_ClinicalBERT'
 EPOCHS = 1
 BATCH_SIZE = 32
 
 DROPOUT_RATE = 0.8
-MODEL_OUT_FILE_NAME = 'bert_evidence_baseline_model.h5'
+MODEL_OUT_FILE_NAME = 'bert_model'
 TOKENIZER = AutoTokenizer.from_pretrained(MODEL_NAME)
 
 class BertBaseline():
     def __init__(self):
         self.max_length = 512
         self.num_classes = 512
-        self.language_model_name = 'bert-base-uncased'
+        # use clinical bert
+        self.language_model_name = 'emilyalsentzer/Bio_ClinicalBERT'
         self.learning_rate = 1e-5
         tokenizer = AutoTokenizer.from_pretrained(self.language_model_name)
         self.tokenizer = tokenizer

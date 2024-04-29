@@ -5,6 +5,7 @@ from transformers import AutoTokenizer
 import tensorflow as tf
 
 def train():
+    print("Running Bert with Context")
     tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased')
     train_dataset = pd.read_csv('../data/emrqa_context_train.csv')
     val_dataset = pd.read_csv('../data/emrqa_context_val.csv')
@@ -30,8 +31,8 @@ def train():
     val_y = np.stack((np.eye(512)[val_dataset['start_token']], np.eye(512)[val_dataset['end_token']]), axis=1)
     bert_baseline = BertBaseline()
     history = bert_baseline.train(train_x, train_y, val_x, val_y, batch_size=32, epochs=50)
-    bert_baseline.model.save('bert_context_baseline_model.h5')
-    bert_baseline.model.save_weights('bert_context_baseline_weights.h5')
+    print("Saving Bert with Context")
+    bert_baseline.model.save('bert_context_model')
 
 def test():
     model = BertBaseline()
