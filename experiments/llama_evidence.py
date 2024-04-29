@@ -33,7 +33,7 @@ llm = HuggingFacePipeline(pipeline=text_pipeline, model_kwargs={"temperature": 0
 
 template = """
 <s>[INST] <<SYS>>
-    Act as a Clinical Question Answering agent. You will be provided a question and then a context. You must answer the question using text ONLY inside the context. You must not provide any additional information or generate any novel text, only use text from the context. Do not say anything else BUT the answer to the question.
+    Act as a Clinical Question Answering agent. You will be provided a question and then a context. You must answer the question using text ONLY inside the context. You must not provide any additional information or generate any novel text, only use text from the context. Do not say anything else BUT the answer to the question. The answer always exists in the evidence provided.
     <</SYS>>
 
     Context:
