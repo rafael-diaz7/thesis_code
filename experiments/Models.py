@@ -1,9 +1,10 @@
 from transformers import AutoTokenizer, TFAutoModel
 import tensorflow as tf
+import numpy as np
 
 
 MODEL_NAME = 'emilyalsentzer/Bio_ClinicalBERT'
-EPOCHS = 1
+EPOCHS = 50
 BATCH_SIZE = 32
 
 DROPOUT_RATE = 0.8
@@ -59,18 +60,6 @@ class BertBaseline():
                            callbacks=callbacks,
                            verbose=1)
 
-    # def predict(self, x, batch_size=100):
-    #     tokenized = self.tokenizer(x, padding='max_length', truncation=True, max_length=self.max_length, return_tensors='tf')
-    #     x = (tokenized['input_ids'], tokenized['attention_mask'])
-    #
-    #     start_probs, end_probs = self.model.predict(x, batch_size=batch_size)
-    #
-    #     # Get the index with the highest probability for each position
-    #     start_index = tf.argmax(start_probs, axis=1)
-    #     end_index = tf.argmax(end_probs, axis=1)
-    #
-    #     return start_index, end_index
-
     def save_model(self, filepath):
         self.model.save(filepath)
         self.model.save_weights(filepath)
@@ -78,4 +67,46 @@ class BertBaseline():
     def load_model_weights(self, filepath):
         self.model.load_weights(filepath)
 
-# change y_true
+
+class SentenceClassificationBert():
+    def __init__(self):
+        self.max_length = 512
+        self.num_classes = 512
+        # use clinical bert
+        self.language_model_name = 'emilyalsentzer/Bio_ClinicalBERT'
+        self.learning_rate = 1e-5
+        tokenizer = AutoTokenizer.from_pretrained(self.language_model_name)
+        self.tokenizer = tokenizer
+
+        language_model = TFAutoModel.from_pretrained(self.language_model_name)
+
+        input_ids = tf.keras.Input(shape=(None,), dtype=tf.int32, name='input_ids')
+        attention_mask = tf.keras.Input(shape=(None,), dtype=tf.int32, name='attention_mask')
+
+        embeddings = language_model(input_ids, attention_mask=attention_mask)[0]
+
+        sentence_representation_language_model = embeddings[:, 0, :]
+
+        predicted = tf.keras.layers.Dense(1, activation='sigmoid')(sentence_representation_language_model)
+
+        self.model = tf.keras.Model(inputs=[input_ids, attention_mask], outputs=predicted)
+        optimizer = tf.keras.optimizers.Adam(learning_rate=self.learning_rate)
+        metrics = ['accuracy', tf.keras.metrics.Precision(), tf.keras.metrics.Recall()]
+        self.model.compile(optimizer=optimizer, loss=tf.keras.losses.BinaryCrossentropy(), metrics=metrics)
+        self.model.summary()
+
+    def train(self, train_gen, val_gen, epochs=EPOCHS):
+        callbacks = []
+        callbacks.append(tf.keras.callbacks.EarlyStopping(
+            monitor='val_loss',
+            patience=3,
+            restore_best_weights=True,
+            mode='min'))
+
+        return self.model.fit(train_gen,
+                              validation_data=val_gen,
+                              epochs=epochs,
+                              steps_per_epoch=len(train_gen),
+                              validation_steps=len(val_gen),
+                              callbacks=callbacks,
+                              verbose=1)

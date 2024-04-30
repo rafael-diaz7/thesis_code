@@ -10,7 +10,7 @@ it can be hotswapped with sent_tokenize, so that's nice. install just didn't wor
 import pandas as pd
 from transformers import AutoTokenizer
 from nltk.corpus import stopwords
-from nltk.tokenize import sent_tokenize
+from clinitokenizer.tokenize import clini_tokenize as sent_tokenize
 from gensim.corpora import Dictionary
 from gensim.models import TfidfModel
 from gensim.matutils import cossim
@@ -18,6 +18,8 @@ from gensim.matutils import cossim
 
 tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
 stopwords = set(stopwords.words('english'))
+
+sentence_cache = {}
 
 def create_tfidf_evidence(df, fp):
     all_context_texts = df['context'].unique().tolist()
@@ -41,7 +43,10 @@ def create_tfidf_evidence(df, fp):
 
 
 def apply_tfidf_to_context(question, context, dictionary, tfidf):
-    sentences = sent_tokenize(context)
+    if context in sentence_cache:
+        sentences = sentence_cache[context]
+    else:
+        sentences = sent_tokenize(context)
     # get vector for each sentence
     sentence_vectors = [tfidf[dictionary.doc2bow(sentence.split())] for sentence in sentences]
     question_vector = tfidf[dictionary.doc2bow(question.split())]
@@ -95,6 +100,6 @@ if __name__ == '__main__':
     df_val = pd.read_csv('../data/emrqa_context_val.csv')
     df_test = pd.read_csv('../data/emrqa_context_test.csv')
 
-    create_tfidf_evidence(df_train, '../data/emrqa_tfidf_evidence_train.csv')
-    create_tfidf_evidence(df_val, '../data/emrqa_tfidf_evidence_val.csv')
-    create_tfidf_evidence(df_test, '../data/emrqa_tfidf_evidence_test.csv')
+    create_tfidf_evidence(df_train, '../data/emrqa_clini_tfidf_evidence_train.csv')
+    create_tfidf_evidence(df_val, '../data/emrqa_clini_tfidf_evidence_val.csv')
+    create_tfidf_evidence(df_test, '../data/emrqa_clini_tfidf_evidence_test.csv')
