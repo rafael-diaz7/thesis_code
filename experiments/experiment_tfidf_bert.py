@@ -5,7 +5,7 @@ from transformers import AutoTokenizer
 
 def train():
     print("Training Bert with TF-IDF Evidence")
-    tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased')
+    tokenizer = AutoTokenizer.from_pretrained('emilyalsentzer/Bio_ClinicalBERT')
     train_dataset = pd.read_csv('../data/emrqa_tfidf_evidence_train.csv')
     val_dataset = pd.read_csv('../data/emrqa_tfidf_evidence_val.csv')
 

@@ -6,7 +6,7 @@ import tensorflow as tf
 
 def train():
     print("Running Bert with Context")
-    tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased')
+    tokenizer = AutoTokenizer.from_pretrained('emilyalsentzer/Bio_ClinicalBERT')
     train_dataset = pd.read_csv('../data/emrqa_context_train.csv')
     val_dataset = pd.read_csv('../data/emrqa_context_val.csv')
 
