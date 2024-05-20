@@ -3,13 +3,13 @@ import pandas as pd
 from nltk import sent_tokenize
 from tqdm import tqdm
 import numpy as np
-import tensorflow as tf
 from experiments.Models import SentenceClassificationBert
 tqdm.pandas()
 tokenizer = AutoTokenizer.from_pretrained('emilyalsentzer/Bio_ClinicalBERT')
 model = SentenceClassificationBert()
 
-model.model.load_weights("bert_sentence_classification_model/variables/variables")
+# model.model.load_weights("bert_sentence_classification_model/variables/variables")
+model.model.load_weights("../models/bert_sentence_classification_model")
 
 def classify_df_iteration(df, context_tokenized_key):
     for ind, i in tqdm(df.iterrows()):
@@ -37,7 +37,7 @@ def classify_df_apply(row, context_tokenized_key):
                            return_tensors='tf')
     test_x = (tokenized['input_ids'], tokenized['attention_mask'])
     predictions = (model.model.predict(test_x, verbose=False) >= 0.5).reshape(-1)
-    correct = np.array(questions)[predictions]
+    correct = np.array(sentences)[predictions]
     return "".join(correct)
 
 def val_set_only():
@@ -88,5 +88,9 @@ def test():
     test_df["predicted_evidence"] = test_df.progress_apply(lambda row: classify_df_apply(row, context_tokenized_key), axis=1)
     val_df["predicted_evidence"] = val_df.progress_apply(lambda row: classify_df_apply(row, context_tokenized_key), axis=1)
 
+    train_df.to_csv("../data/testtest.csv", index=False)
+
 if __name__ == "__main__":
     train_set_only()
+    # val_set_only()
+    # test_set_only()
