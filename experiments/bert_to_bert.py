@@ -10,14 +10,14 @@ def train():
     val_dataset = pd.read_csv('../data/emrqa_val_bert_predicted.csv')
 
     # tokenize the training and validation datasets
-    tokenized_train = tokenizer(train_dataset['question'].to_list(),
-                                train_dataset['predicted_evidence'].to_list(),
+    tokenized_train = tokenizer(train_dataset['question'].astype(str).to_list(),
+                                train_dataset['predicted_evidence'].astype(str).to_list(),
                                 padding='max_length',
                                 truncation=True,
                                 max_length=512,
                                 return_tensors='tf')
-    tokenized_val = tokenizer(val_dataset['question'].to_list(),
-                              val_dataset['predicted_evidence'].to_list(),
+    tokenized_val = tokenizer(val_dataset['question'].astype(str).to_list(),
+                              val_dataset['predicted_evidence'].astype(str).to_list(),
                               padding='max_length',
                               truncation=True,
                               max_length=512,
