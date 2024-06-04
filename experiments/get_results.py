@@ -54,10 +54,9 @@ def get_prediction(evidence, predicted_start, predicted_end):
 def get_bert_baseline_results():
     df = pd.read_csv('../data/emrqa_evidence_test.csv')
     model = BertBaseline()
-    # checkpoint = tf.train.Checkpoint(model=model.model)
-    # checkpoint.restore(tf.train.latest_checkpoint('../models/latest/bert_evidence_model'))
+    checkpoint = tf.train.Checkpoint(model=model.model)
+    checkpoint.restore(tf.train.latest_checkpoint('../models/latest/bert_evidence_model'))
     # checkpoint.restore(tf.train.latest_checkpoint('bert_evidence_model'))
-    model.model.load_weights('bert_evidence_model')
     tokenized_data = tokenizer(df['question'].to_list(),
                                df['evidence'].to_list(),
                                padding='max_length',
