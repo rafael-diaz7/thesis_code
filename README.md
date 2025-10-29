@@ -7,11 +7,17 @@ Natural Language Processing (NLP) enables interaction between humans and softwar
 
 ## Repository information
 I tried to keep this repo clean and intuitive to search through, but coming back after a year, I don't think I did the best job with that. Below is context for each directory within this repo:
+
 `/data/`: empty directory, but where data was stored locally
+
 `/experiments/`: all code pertaining to the actual model training. there are classes used for Model creation, shell scripts for running the experiment, and some data parsing notebooks.
+
 `/notebooks/`: data exploration and cleaning jupyter notebooks. lots of experimentation, quite messy
+
 `/result_calculations/`: holds `.csv` of all model outputs, truth values, and F1 scores
+
 `/utils/`: utilities used when working on the thesis: verifying CUDA GPU, creating a cleaned dataset, generating plots..
+
 
 ## More info
 Please feel free to reach out to me to view the full thesis, I can provide both the LaTeX used to generate my paper as well as a .pdf format of it.
